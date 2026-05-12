@@ -76,3 +76,52 @@ Create clean package structure and add the first basic health check controller.
 ### Next Task
 
 Prepare Week 2 user/auth/account foundation, but do not start it until Week 1 infrastructure tasks are fully committed and pushed.
+
+## Week 1 Day 3 - Infrastructure Reproducibility Check
+
+Status: Completed
+
+Completed today:
+
+- Updated README.md with Quick Start instructions.
+- Documented prerequisites, infrastructure startup, application startup, test command, verified endpoints, Swagger access, and current project boundary.
+- Updated API_EXAMPLES.md with currently implemented API endpoints only.
+- Verified Actuator health endpoint:
+  - GET /actuator/health
+- Verified custom system status endpoint:
+  - GET /api/system/status
+- Verified Swagger UI:
+  - http://localhost:8080/swagger-ui/index.html
+- Verified OpenAPI JSON:
+  - http://localhost:8080/v3/api-docs
+- Verified Maven tests:
+  - mvn test
+- Confirmed that Kafka is still verified at Docker container level only.
+- Confirmed that Java Kafka producer and consumer integration has not been implemented yet.
+
+Current implemented endpoints:
+
+- GET /actuator/health
+- GET /api/system/status
+- Swagger UI: /swagger-ui/index.html
+- OpenAPI JSON: /v3/api-docs
+
+Current project boundary:
+
+- No user registration/login yet.
+- No JWT authentication yet.
+- No account module yet.
+- No order module yet.
+- No matching engine yet.
+- No trade execution yet.
+- No Java Kafka producer/consumer yet.
+- No Redis business cache yet.
+- No AI anomaly detection yet.
+
+Important note:
+
+Week 1 Day 3 is not about adding new business features. It is about making the project reproducible, documented, testable, and ready for Week 2 authentication and account development.
+
+Next task:
+
+Prepare Week 2 user/auth/account foundation. Do not start implementation until Week 1 is fully committed and pushed.

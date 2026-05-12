@@ -1,52 +1,87 @@
 ﻿# API Examples
 
-## Current Available Endpoint
+This document records the currently verified API endpoints of the project.
 
-### Health Check
+The project is currently in Week 1 infrastructure setup. Only infrastructure-level endpoints are available.
 
-```http
-GET /actuator/health
-```
+No user, account, order, matching, trade, Kafka event, Redis cache, or AI endpoints have been implemented yet.
 
-Example response:
+## 1. Actuator Health Check
 
-```json
-{
-  "status": "UP"
-}
-```
+Purpose:
 
-## Planned APIs
+Checks whether the Spring Boot application and configured infrastructure health indicators are available.
 
-### Authentication
+Request:
 
-```http
-POST /api/auth/login
-```
+    GET /actuator/health
 
-### Account
+Example curl command:
 
-```http
-GET /api/accounts/{accountId}
-```
+    curl http://localhost:8080/actuator/health
 
-### Orders
+Expected response:
 
-```http
-POST /api/orders
-GET /api/orders/{orderId}
-```
+    {
+      "status": "UP"
+    }
 
-### Trades
+Notes:
 
-```http
-GET /api/trades
-```
+- This endpoint is provided by Spring Boot Actuator.
+- It is used to verify application and infrastructure health.
+- It is not a custom business API.
 
-### Portfolio
+## 2. Custom System Status API
 
-```http
-GET /api/portfolio/{accountId}
-```
+Purpose:
 
-These APIs are planned for later development phases.
+Verifies that the project has a custom controller endpoint and can return a JSON response successfully.
+
+Request:
+
+    GET /api/system/status
+
+Example curl command:
+
+    curl http://localhost:8080/api/system/status
+
+Expected response:
+
+    {
+      "application": "trading-risk-platform",
+      "status": "UP",
+      "phase": "INFRASTRUCTURE_SETUP"
+    }
+
+Notes:
+
+- This endpoint is implemented by the project.
+- It is a minimal custom API for Week 1 infrastructure verification.
+- It does not represent trading, account, order, risk, or authentication functionality.
+
+## Current API Boundary
+
+Implemented:
+
+- GET /actuator/health
+- GET /api/system/status
+
+Not implemented yet:
+
+- User registration
+- User login
+- JWT authentication
+- Account API
+- Order API
+- Matching engine API
+- Trade API
+- Portfolio API
+- Risk control API
+- Kafka producer or consumer API
+- Redis cache API
+- AI anomaly detection API
+
+Important note:
+
+Kafka is currently verified at Docker container level only. Java Kafka producer and consumer integration has not been implemented yet.
