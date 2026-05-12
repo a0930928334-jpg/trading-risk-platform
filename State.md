@@ -41,3 +41,38 @@ Project infrastructure setup
 
 ## Next Task
 Create clean package structure and add the first basic health check controller.
+## Week 1 Day 2 Progress
+
+### Completed
+
+- Added custom system status API:
+    - `GET /api/system/status`
+- Added response DTO:
+    - `SystemStatusResponse`
+- Added controller:
+    - `SystemStatusController`
+- Added first controller test:
+    - `SystemStatusControllerTest`
+- Verified `/api/system/status` manually in browser.
+- Verified `/actuator/health` still returns `UP`.
+- Verified PostgreSQL health is `UP`.
+- Verified Redis health is `UP`.
+
+### Current Infrastructure Status
+
+- Spring Boot application starts successfully.
+- PostgreSQL container is running and connected.
+- Redis container is running and connected.
+- Kafka container is running at Docker level only.
+- Java Kafka producer/consumer integration has not been implemented yet.
+- No trading, order, account, user, matching, or AI module has been created yet.
+
+### Notes
+
+`/actuator/health` is a Spring Boot infrastructure health endpoint. It is used to check whether the application and connected infrastructure components are healthy.
+
+`/api/system/status` is a custom application endpoint created by this project. It confirms that our own controller layer can return JSON responses correctly.
+
+### Next Task
+
+Prepare Week 2 user/auth/account foundation, but do not start it until Week 1 infrastructure tasks are fully committed and pushed.
