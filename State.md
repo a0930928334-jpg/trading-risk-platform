@@ -125,3 +125,35 @@ Week 1 Day 3 is not about adding new business features. It is about making the p
 Next task:
 
 Prepare Week 2 user/auth/account foundation. Do not start implementation until Week 1 is fully committed and pushed.
+
+## Week 2 Day 1 Progress
+
+Status: Completed
+
+Completed today:
+
+- Added Flyway V2 migration: `V2__create_user_account_tables.sql`
+- Created database tables: `app_users`, `accounts`, `cash_balances`
+- Added `AppUser` entity and `UserStatus` enum
+- Added `AppUserRepository`
+- Added `Account` entity and `AccountStatus` enum
+- Added `AccountRepository`
+- Added `CashBalance` entity and `CashBalanceRepository`
+- Added `AccountPersistenceTest` covering AppUser → Account → CashBalance persistence
+- Verified `mvn test` — BUILD SUCCESS
+- Pushed code to GitHub
+
+Current project boundary:
+
+- No registration API yet
+- No login API yet
+- No password hashing service yet
+- No JWT authentication yet
+- No protected user endpoint yet
+- No Kafka business integration yet
+- No Redis business cache yet
+- No order placement, matching engine, trade execution, or portfolio accounting yet
+
+Next task:
+
+Week 2 Day 2: Register API
