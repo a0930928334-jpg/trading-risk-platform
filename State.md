@@ -1,10 +1,10 @@
 ﻿# Project State
 
 ## Current Week / Day
-Week 1 Day 1 completed
+Week 2 Day 2 completed
 
 ## Current Phase
-Project infrastructure setup
+User authentication and account foundation
 
 ## Completed
 - Created Spring Boot 3 backend project
@@ -157,3 +157,36 @@ Current project boundary:
 Next task:
 
 Week 2 Day 2: Register API
+
+## Week 2 Day 2 Progress
+
+Status: Completed
+
+Completed today:
+
+- Added `RegisterRequest` and `RegisterResponse` DTOs
+- Added `PasswordEncoder` bean with `BCryptPasswordEncoder`
+- Added `DuplicateEmailException` and `AuthExceptionHandler`
+- Added `AuthService.register()` with `@Transactional`
+- Registration creates `AppUser`, `Account`, and `CashBalance` in one transaction
+- Email is normalized with trim + lowercase
+- Password is stored as BCrypt hash
+- Added `AuthController` with `POST /api/auth/register`
+- Added `RegisterApiIntegrationTest`
+- Verified `mvn test` — BUILD SUCCESS (8 tests)
+- Manual Swagger/API validation passed:
+  - HTTP 201 for successful registration
+  - HTTP 409 for duplicate email
+  - HTTP 400 for blank email
+
+Current project boundary:
+
+- No login yet
+- No JWT yet
+- No protected endpoint yet
+- No Kafka/Redis business integration yet
+- No order/matching/trading features yet
+
+Next task:
+
+Week 2 Day 3: Login API
