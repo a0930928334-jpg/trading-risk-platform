@@ -1,0 +1,4 @@
+app:
+  security:
+    jwt:
+      secret: test-only-secret-for-integration-tests-0123456789

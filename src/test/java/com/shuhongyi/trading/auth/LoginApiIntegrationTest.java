@@ -2,15 +2,12 @@ package com.shuhongyi.trading.auth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.shuhongyi.trading.support.TestcontainersConfiguration;
+import com.shuhongyi.trading.support.IntegrationTest;
 import com.shuhongyi.trading.user.AppUser;
 import com.shuhongyi.trading.user.AppUserRepository;
 import com.shuhongyi.trading.user.UserStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,13 +19,12 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@IntegrationTest
 @Transactional
 class LoginApiIntegrationTest {
 
@@ -36,7 +32,7 @@ class LoginApiIntegrationTest {
     private static final String REGISTER_URL = "/api/auth/register";
     private static final String RAW_PASSWORD = "Password123!";
     private static final Set<String> FORBIDDEN_RESPONSE_FIELDS =
-            Set.of("password", "passwordHash", "jwt", "token");
+            Set.of("password", "passwordHash");
 
     @Autowired
     private MockMvc mockMvc;
@@ -63,7 +59,9 @@ class LoginApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(email))
                 .andExpect(jsonPath("$.fullName").value(fullName))
-                .andExpect(jsonPath("$.message").value("Login successful"))
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.expiresIn").value(3600))
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andReturn();
 
         JsonNode responseJson = objectMapper.readTree(result.getResponse().getContentAsString());
@@ -79,7 +77,8 @@ class LoginApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson("unknown@example.com", RAW_PASSWORD)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Invalid email or password"));
+                .andExpect(jsonPath("$.detail").value("Invalid email or password"))
+                .andExpect(jsonPath("$.code").value("invalid-credentials"));
     }
 
     @Test
@@ -91,7 +90,8 @@ class LoginApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson(email, "WrongPassword123!")))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Invalid email or password"));
+                .andExpect(jsonPath("$.detail").value("Invalid email or password"))
+                .andExpect(jsonPath("$.code").value("invalid-credentials"));
     }
 
     @Test
@@ -137,7 +137,26 @@ class LoginApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson(email, RAW_PASSWORD)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Invalid email or password"));
+                .andExpect(jsonPath("$.detail").value("Invalid email or password"))
+                .andExpect(jsonPath("$.code").value("invalid-credentials"));
+    }
+
+    @Test
+    void issuedTokenAuthenticatesProtectedEndpoint() throws Exception {
+        String email = "token-user@example.com";
+        registerUser(email, RAW_PASSWORD, "Token User");
+
+        MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson(email, RAW_PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn();
+        String accessToken = objectMapper.readTree(result.getResponse().getContentAsString())
+                .get("accessToken").asText();
+
+        mockMvc.perform(get("/api/me").header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(email));
     }
 
     private void registerUser(String email, String password, String fullName) throws Exception {

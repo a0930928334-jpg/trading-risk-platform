@@ -7,15 +7,12 @@ import com.shuhongyi.trading.account.AccountRepository;
 import com.shuhongyi.trading.account.AccountStatus;
 import com.shuhongyi.trading.account.CashBalance;
 import com.shuhongyi.trading.account.CashBalanceRepository;
-import com.shuhongyi.trading.support.TestcontainersConfiguration;
+import com.shuhongyi.trading.support.IntegrationTest;
 import com.shuhongyi.trading.user.AppUser;
 import com.shuhongyi.trading.user.AppUserRepository;
 import com.shuhongyi.trading.user.UserStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,12 +26,11 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@IntegrationTest
 @Transactional
 class RegisterApiIntegrationTest {
 
@@ -116,7 +112,9 @@ class RegisterApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("Email already registered: " + email));
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value("duplicate-email"))
+                .andExpect(jsonPath("$.detail").value("Email already registered: " + email));
     }
 
     @Test
@@ -124,7 +122,20 @@ class RegisterApiIntegrationTest {
         mockMvc.perform(post(REGISTER_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(registerJson("", RAW_PASSWORD, "Blank Email User")))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value("validation-failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("email"));
+    }
+
+    @Test
+    void shouldRejectMalformedJsonAsProblemDetail() throws Exception {
+        mockMvc.perform(post(REGISTER_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{not-json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test

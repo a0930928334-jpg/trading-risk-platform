@@ -1,0 +1,5 @@
+app:
+  security:
+    jwt:
+      # Development-only default. Override with the JWT_SECRET environment variable.
+      secret: ${JWT_SECRET:dev-only-insecure-secret-change-me-0123456789}
