@@ -1,0 +1,95 @@
+### Requests for the IntelliJ HTTP Client (or the VS Code REST Client extension).
+### Start the app with the dev profile first:
+###   docker compose up -d postgres
+###   ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+### Run the requests top to bottom; the login response stores the token.
+
+@baseUrl = http://localhost:8080
+@email = alice@example.com
+@password = Password123!
+
+### Register (409 if the email is already registered: just continue)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{"email": "{{email}}", "password": "{{password}}", "fullName": "Alice Example"}
+
+### Log in
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{"email": "{{email}}", "password": "{{password}}"}
+
+> {% client.global.set("token", response.body.accessToken); %}
+
+### Current user
+GET {{baseUrl}}/api/me
+Authorization: Bearer {{token}}
+
+### Deposit
+POST {{baseUrl}}/api/account/deposits
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"amount": 50000}
+
+### Account balance
+GET {{baseUrl}}/api/account
+Authorization: Bearer {{token}}
+
+### Instruments
+GET {{baseUrl}}/api/instruments
+Authorization: Bearer {{token}}
+
+### Order book
+GET {{baseUrl}}/api/instruments/AAPL/book?depth=5
+Authorization: Bearer {{token}}
+
+### Buy 150 AAPL at up to 192.00
+POST {{baseUrl}}/api/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"symbol": "AAPL", "side": "BUY", "price": 192.00, "quantity": 150}
+
+> {% client.global.set("orderId", response.body.id); %}
+
+### The order
+GET {{baseUrl}}/api/orders/{{orderId}}
+Authorization: Bearer {{token}}
+
+### My orders (optionally ?status=NEW|PARTIALLY_FILLED|FILLED|CANCELLED|REJECTED)
+GET {{baseUrl}}/api/orders?page=0&size=20
+Authorization: Bearer {{token}}
+
+### My trades
+GET {{baseUrl}}/api/trades
+Authorization: Bearer {{token}}
+
+### My positions
+GET {{baseUrl}}/api/positions
+Authorization: Bearer {{token}}
+
+### Resting buy order
+POST {{baseUrl}}/api/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"symbol": "MSFT", "side": "BUY", "price": 400.00, "quantity": 5}
+
+> {% client.global.set("restingId", response.body.id); %}
+
+### Cancel it
+DELETE {{baseUrl}}/api/orders/{{restingId}}
+Authorization: Bearer {{token}}
+
+### Rejected by the price band (stored with status REJECTED)
+POST {{baseUrl}}/api/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"symbol": "NVDA", "side": "BUY", "price": 156.00, "quantity": 1}
+
+### Cash ledger
+GET {{baseUrl}}/api/account/ledger?size=20
+Authorization: Bearer {{token}}
