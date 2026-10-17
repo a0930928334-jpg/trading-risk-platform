@@ -5,9 +5,12 @@ import com.shuhongyi.trading.account.AccountRepository;
 import com.shuhongyi.trading.account.AccountStatus;
 import com.shuhongyi.trading.account.CashBalance;
 import com.shuhongyi.trading.account.CashBalanceRepository;
+import com.shuhongyi.trading.auth.dto.LoginRequest;
+import com.shuhongyi.trading.auth.dto.LoginResponse;
 import com.shuhongyi.trading.auth.dto.RegisterRequest;
 import com.shuhongyi.trading.auth.dto.RegisterResponse;
 import com.shuhongyi.trading.auth.exception.DuplicateEmailException;
+import com.shuhongyi.trading.auth.exception.InvalidCredentialsException;
 import com.shuhongyi.trading.user.AppUser;
 import com.shuhongyi.trading.user.AppUserRepository;
 import com.shuhongyi.trading.user.UserStatus;
@@ -80,6 +83,29 @@ public class AuthService {
                 savedAccount.getId(),
                 savedAccount.getAccountNumber(),
                 savedAccount.getCurrency()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public LoginResponse login(LoginRequest request) {
+        String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
+
+        AppUser user = appUserRepository.findByEmail(normalizedEmail)
+                .orElseThrow(InvalidCredentialsException::new);
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new InvalidCredentialsException();
+        }
+
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException();
+        }
+
+        return new LoginResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFullName(),
+                "Login successful"
         );
     }
 }
