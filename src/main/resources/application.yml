@@ -28,6 +28,11 @@ app:
       secret: ${JWT_SECRET:}
       issuer: trading-risk-platform
       ttl: PT1H
+  risk:
+    # Largest allowed quantity x price for a single order.
+    max-order-notional: 100000
+    # Maximum distance of a limit price from the last trade (or reference) price, in percent.
+    price-band-percent: 10
 
 management:
   endpoints:
