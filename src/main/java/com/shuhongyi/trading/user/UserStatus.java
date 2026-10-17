@@ -2,5 +2,7 @@ package com.shuhongyi.trading.user;
 
 public enum UserStatus {
     ACTIVE,
-    DISABLED
+    DISABLED,
+    /** Internal account (e.g. the dev market maker). Cannot log in. */
+    SYSTEM
 }
