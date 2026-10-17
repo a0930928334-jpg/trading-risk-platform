@@ -31,16 +31,19 @@ public class AuthService {
     private final AccountRepository accountRepository;
     private final CashBalanceRepository cashBalanceRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenService jwtTokenService;
 
     public AuthService(
             AppUserRepository appUserRepository,
             AccountRepository accountRepository,
             CashBalanceRepository cashBalanceRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            JwtTokenService jwtTokenService) {
         this.appUserRepository = appUserRepository;
         this.accountRepository = accountRepository;
         this.cashBalanceRepository = cashBalanceRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtTokenService = jwtTokenService;
     }
 
     @Transactional
@@ -101,11 +104,16 @@ public class AuthService {
             throw new InvalidCredentialsException();
         }
 
+        JwtTokenService.IssuedToken token = jwtTokenService.issue(user);
+
         return new LoginResponse(
+                token.value(),
+                "Bearer",
+                token.expiresInSeconds(),
+                token.expiresAt(),
                 user.getId(),
                 user.getEmail(),
-                user.getFullName(),
-                "Login successful"
+                user.getFullName()
         );
     }
 }
