@@ -2,14 +2,15 @@ package com.shuhongyi.trading.auth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shuhongyi.trading.support.TestcontainersConfiguration;
 import com.shuhongyi.trading.user.AppUser;
 import com.shuhongyi.trading.user.AppUserRepository;
 import com.shuhongyi.trading.user.UserStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(TestcontainersConfiguration.class)
 @Transactional
 class LoginApiIntegrationTest {
 
