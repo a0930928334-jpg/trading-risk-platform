@@ -14,4 +14,10 @@ public class AuthExceptionHandler {
     public Map<String, String> handleDuplicateEmail(DuplicateEmailException exception) {
         return Map.of("message", exception.getMessage());
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Map<String, String> handleInvalidCredentials(InvalidCredentialsException exception) {
+        return Map.of("message", exception.getMessage());
+    }
 }
