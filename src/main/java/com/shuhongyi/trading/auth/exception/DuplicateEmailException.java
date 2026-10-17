@@ -1,8 +1,11 @@
 package com.shuhongyi.trading.auth.exception;
 
-public class DuplicateEmailException extends RuntimeException {
+import com.shuhongyi.trading.common.error.ApiException;
+import org.springframework.http.HttpStatus;
+
+public class DuplicateEmailException extends ApiException {
 
     public DuplicateEmailException(String email) {
-        super("Email already registered: " + email);
+        super(HttpStatus.CONFLICT, "duplicate-email", "Email already registered: " + email);
     }
 }
