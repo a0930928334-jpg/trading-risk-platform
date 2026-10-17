@@ -27,6 +27,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     /** Open orders of one instrument in time priority, used to rebuild its order book. */
     List<Order> findByInstrumentIdAndStatusInOrderByIdAsc(Long instrumentId, Collection<OrderStatus> statuses);
 
+    boolean existsByAccountIdAndInstrumentIdAndStatusIn(Long accountId, Long instrumentId, Collection<OrderStatus> statuses);
+
     @Query("select distinct o.instrumentId from Order o where o.status in :statuses")
     List<Long> findInstrumentIdsWithStatusIn(@Param("statuses") Collection<OrderStatus> statuses);
 }
