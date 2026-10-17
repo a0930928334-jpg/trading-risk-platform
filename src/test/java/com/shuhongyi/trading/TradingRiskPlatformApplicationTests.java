@@ -1,12 +1,9 @@
 package com.shuhongyi.trading;
 
-import com.shuhongyi.trading.support.TestcontainersConfiguration;
+import com.shuhongyi.trading.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 
-@SpringBootTest
-@Import(TestcontainersConfiguration.class)
+@IntegrationTest
 class TradingRiskPlatformApplicationTests {
 
 	@Test
