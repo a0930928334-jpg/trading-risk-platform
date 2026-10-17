@@ -1,5 +1,7 @@
 ﻿# Java Event-Driven Trading & Risk Platform
 
+[![CI](https://github.com/a0930928334-jpg/trading-risk-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/a0930928334-jpg/trading-risk-platform/actions/workflows/ci.yml)
+
 A portfolio-level Java backend project for simulating a financial trading and risk management platform.
 
 This project is built to demonstrate backend engineering skills with Java, Spring Boot, PostgreSQL, Redis, Kafka, Flyway, Docker Compose, testing, and later AI-assisted anomaly detection.
@@ -64,9 +66,9 @@ The application should start on:
 
 ## How to Run Tests
 
-Run all tests:
+Run all tests (Docker must be running; database tests use Testcontainers to start PostgreSQL 16):
 
-    mvn test
+    ./mvnw verify
 
 Current expected result:
 
