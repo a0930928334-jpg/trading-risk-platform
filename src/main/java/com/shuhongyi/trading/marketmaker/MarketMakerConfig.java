@@ -20,10 +20,11 @@ public class MarketMakerConfig {
 
     @Bean
     @Profile("dev")
-    public ApplicationRunner marketMakerRunner(MarketMakerAccountSeeder seeder) {
+    public ApplicationRunner marketMakerRunner(MarketMakerAccountSeeder seeder, MarketMakerQuoter quoter) {
         return args -> {
             var account = seeder.seed();
-            log.info("Dev market maker ready: account {}", account.getAccountNumber());
+            int placed = quoter.quote(account);
+            log.info("Dev market maker ready: account {}, {} new quotes placed", account.getAccountNumber(), placed);
         };
     }
 }

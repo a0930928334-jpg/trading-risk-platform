@@ -111,4 +111,11 @@ public class Order {
         }
         status = OrderStatus.CANCELLED;
     }
+
+    /** Cancellation decided by the system rather than the user; the code and reason explain why. */
+    public void cancel(String code, String reason) {
+        cancel();
+        this.rejectCode = code;
+        this.rejectReason = reason;
+    }
 }
