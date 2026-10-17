@@ -23,8 +23,7 @@ public class UserService {
         AppUser user = appUserRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        Account account = accountRepository.findByUser_Id(userId).stream()
-                .findFirst()
+        Account account = accountRepository.findFirstByUser_IdOrderByIdAsc(userId)
                 .orElse(null);
 
         return new MeResponse(
