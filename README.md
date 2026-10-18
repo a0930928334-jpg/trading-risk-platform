@@ -6,6 +6,7 @@ A simulated equities trading back end built with Java 21 and Spring Boot 3. User
 (simulated) cash and trade five instruments with limit orders. Every order passes a chain of pre-trade risk
 checks, reserves the cash or shares it needs, and is matched by an in-memory price-time priority engine.
 PostgreSQL is the source of truth for every order, trade, cash movement and position.
+A React dashboard shows the live order book and lets you trade from the browser.
 
 This is a portfolio project, not a real exchange: instruments, prices and liquidity are simulated.
 
@@ -39,13 +40,14 @@ This is a portfolio project, not a real exchange: instruments, prices and liquid
 | Recovery | Order books rebuilt from open orders at startup and after any failed transaction |
 | Liquidity (dev only) | A system market maker account with cash and shares quotes five non-crossing levels per side on every instrument |
 | Errors | RFC 9457 problem details everywhere, including 401/403 |
+| Web dashboard | React + TypeScript single-page app: log in or register, deposit, instrument list, live order book (click a level to use its price), order entry with value and price-band hints, open orders with cancel, order history, trades, positions and cash ledger; refreshes by polling every 1.5–5 seconds |
 | Delivery | Flyway migrations, OpenAPI/Swagger UI, Testcontainers tests, GitHub Actions CI |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    client["Client<br/>(curl, Swagger UI, api.http)"]
+    client["Client<br/>(React dashboard, curl,<br/>Swagger UI, api.http)"]
 
     subgraph app["Spring Boot application (single instance)"]
         security["Spring Security<br/>JWT resource server"]
@@ -133,7 +135,8 @@ Each decision has an Architecture Decision Record with the context, options and 
 
 Java 21 · Spring Boot 3.5 (Web, Data JPA, Security, OAuth2 Resource Server, Validation, Actuator) ·
 PostgreSQL 16 · Flyway · Lombok · springdoc-openapi · JUnit 5, AssertJ, MockMvc, Testcontainers ·
-Maven wrapper · Docker Compose · GitHub Actions
+Maven wrapper · Docker Compose · GitHub Actions ·
+Front end: React 18, TypeScript, Vite, Vitest
 
 ## Quick start
 
@@ -147,6 +150,19 @@ docker compose up -d postgres
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
+Then, in a second terminal, start the dashboard (Node.js 20 or later):
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+- Dashboard: <http://localhost:5173> (create an account, deposit, then trade against the market maker)
+
+`frontend/package-lock.json` is generated with npm 10, which CI uses (Node 22). npm 11 on Windows may add an
+empty entry for a FreeBSD-only optional Rollup package to the lock file, which then breaks `npm ci` on Linux;
+if `npm install` changes the lock file, do not commit that change.
 - API: <http://localhost:8080>
 - Swagger UI: <http://localhost:8080/swagger-ui/index.html> (log in, then use **Authorize** with the access token)
 - Health: <http://localhost:8080/actuator/health>
@@ -234,6 +250,9 @@ The concurrent trading test checks afterwards that total cash and total shares a
 reservation or position is negative, every reservation equals what the open orders hold, each account's
 ledger replays to its balance, and each in-memory book equals a fresh rebuild from the database.
 
+The front end has its own Vitest unit tests for its formatting and calculation helpers
+(`cd frontend && npm test`); CI type-checks and builds it in a separate job.
+
 Tests that trade create their own randomly named instrument, so they never share an order book and need
 no clean-up. No test depends on the market maker.
 
@@ -266,6 +285,7 @@ src/main/java/com/shuhongyi/trading
 └── config        security, OpenAPI, web and clock configuration
 src/main/resources/db/migration   Flyway V1–V6
 docs/adr                          architecture decision records
+frontend/                         React + Vite dashboard (proxies /api to :8080 in development)
 scripts/demo.sh, api.http         demo flows
 ```
 

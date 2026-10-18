@@ -17,6 +17,7 @@ lives in [docs/adr](docs/adr).
 | M4 Orders and risk | Order placement and cancellation, pluggable risk rule chain, stored rejections | #5 |
 | M5 Matching engine | Pure Java matching core, settlement, order book rebuild, book depth and trades endpoints, self-trade prevention | #6 |
 | M6 Polish | Concurrent conservation test, OpenAPI annotations, README, ADRs, demo script | #8 |
+| Web dashboard | React + TypeScript front end in `frontend/` with its own CI job | #9 |
 
 ## Test status
 
