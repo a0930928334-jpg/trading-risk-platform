@@ -150,7 +150,7 @@ docker compose up -d postgres
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Then, in a second terminal, start the dashboard (Node.js 24 with npm 11):
+Then, in a second terminal, start the dashboard (Node.js 20 or later):
 
 ```bash
 cd frontend
@@ -159,6 +159,10 @@ npm run dev
 ```
 
 - Dashboard: <http://localhost:5173> (create an account, deposit, then trade against the market maker)
+
+`frontend/package-lock.json` is generated with npm 10, which CI uses (Node 22). npm 11 on Windows may add an
+empty entry for a FreeBSD-only optional Rollup package to the lock file, which then breaks `npm ci` on Linux;
+if `npm install` changes the lock file, do not commit that change.
 - API: <http://localhost:8080>
 - Swagger UI: <http://localhost:8080/swagger-ui/index.html> (log in, then use **Authorize** with the access token)
 - Health: <http://localhost:8080/actuator/health>
