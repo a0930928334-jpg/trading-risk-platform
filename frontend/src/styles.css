@@ -13,6 +13,8 @@
   --warn: #f0b90b;
   --radius: 8px;
   --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  /* Wide screens keep a readable width instead of stretching the order book across the page. */
+  --page-width: 1200px;
   color-scheme: dark;
 }
 
@@ -227,7 +229,7 @@ label {
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 12px 20px;
+  padding: 12px max(20px, calc((100% - var(--page-width)) / 2 + 12px));
   border-bottom: 1px solid var(--border);
   background: var(--panel);
   flex-wrap: wrap;
@@ -271,7 +273,9 @@ label {
 
 .grid {
   display: grid;
-  grid-template-columns: 220px minmax(300px, 1fr) 320px;
+  max-width: var(--page-width);
+  margin: 0 auto;
+  grid-template-columns: 220px minmax(300px, 1fr) 340px;
   grid-template-areas:
     'watch book form'
     'activity activity activity';
@@ -346,7 +350,7 @@ label {
 .book-row {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr 60px;
+  grid-template-columns: 1fr 90px 60px;
   padding: 3px 8px;
   border: none;
   border-radius: 3px;
@@ -491,4 +495,22 @@ td {
 }
 .status.cancelled {
   color: var(--muted);
+}
+
+/* Getting started prompt */
+.banner.info .link {
+  font-weight: 600;
+}
+.getting-started {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: var(--page-width);
+  margin: 12px auto 0;
+}
+@media (max-width: 1224px) {
+  .getting-started {
+    margin: 12px 12px 0;
+  }
 }
