@@ -150,7 +150,7 @@ docker compose up -d postgres
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Then, in a second terminal, start the dashboard (Node.js 20 or later):
+Then, in a second terminal, start the dashboard (Node.js 24 with npm 11):
 
 ```bash
 cd frontend
