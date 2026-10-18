@@ -151,11 +151,28 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
-  const response = await fetch(`/api${path}`, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`/api${path}`, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiError(0, 'network-error', 'Cannot reach the server. Check that the front end dev server is running.');
+  }
+
+  // Every API error is a JSON problem detail. Anything else means the request never reached the
+  // Spring Boot application (back end stopped, or the page is not served through the Vite proxy).
+  const isJson = (response.headers.get('Content-Type') ?? '').includes('json');
+  if (!response.ok && !isJson) {
+    throw new ApiError(
+      response.status,
+      'api-unreachable',
+      `The API is not reachable (HTTP ${response.status}). Make sure the back end is running on port 8080 ` +
+        'and open the dashboard from `npm run dev`, which forwards /api to it.',
+    );
+  }
 
   if (!response.ok) {
     let detail = `${response.status} ${response.statusText}`;

@@ -3,6 +3,7 @@ import { api } from '../api';
 import { usePolling } from '../usePolling';
 import AccountPanel from './AccountPanel';
 import ActivityTabs from './ActivityTabs';
+import GettingStarted from './GettingStarted';
 import OrderBookPanel from './OrderBookPanel';
 import OrderForm from './OrderForm';
 import Watchlist from './Watchlist';
@@ -52,6 +53,10 @@ export default function Dashboard({ onLogout }: Props) {
           Log out
         </button>
       </header>
+
+      {account.data && account.data.balance === 0 && (positions.data?.content.length ?? 0) === 0 && (
+        <GettingStarted onDeposited={refreshAll} />
+      )}
 
       <main className="grid">
         <section className="panel watchlist-panel">
