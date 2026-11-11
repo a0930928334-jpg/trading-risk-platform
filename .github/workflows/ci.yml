@@ -55,3 +55,83 @@ jobs:
 
       - name: Type-check and build
         run: npm run build
+
+  analytics:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: trading_platform
+          POSTGRES_USER: trading_user
+          POSTGRES_PASSWORD: trading_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U trading_user -d trading_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: analytics/requirements.txt
+
+      - name: Install analytics dependencies
+        working-directory: analytics
+        run: |
+          pip install -r requirements.txt
+          pip install -e . --no-deps
+
+      - name: Lint
+        working-directory: analytics
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Unit and fault-injection tests (PostgreSQL)
+        working-directory: analytics
+        run: pytest -q
+
+      - name: Set up Temurin JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build application
+        run: ./mvnw -B -q -DskipTests package
+
+      - name: Start application with the dev profile
+        run: |
+          java -jar target/trading-risk-platform-*.jar --spring.profiles.active=dev > app.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fs http://localhost:8080/actuator/health | grep -q '"UP"'; then exit 0; fi
+            sleep 2
+          done
+          echo "Application did not start"; tail -50 app.log; exit 1
+
+      - name: Generate load (normal and scripted anomalous accounts)
+        working-directory: analytics
+        run: python -m trading_analytics loadgen --seed 20261111 --labels-out report/labels.json
+
+      - name: Run checks, metrics and anomaly detection
+        working-directory: analytics
+        run: python -m trading_analytics run --out report --labels report/labels.json
+
+      - name: Upload analytics report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analytics-report
+          path: |
+            analytics/report/
+            app.log
+          if-no-files-found: ignore
