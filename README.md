@@ -235,12 +235,12 @@ Docker must be running: integration tests start a PostgreSQL 16 container with
 [Testcontainers](https://testcontainers.com/), shared by all test classes. They need no local database,
 and CI runs the same command.
 
-The suite has **172 test cases** (156 test methods; parameterised tests count once per case):
+The suite has **171 test cases** (156 test methods; parameterised tests count once per case):
 
 | Kind | Cases | What they cover |
 |---|---|---|
 | Unit (no Spring, no database) | 75 | Matching engine and order book (including a seeded 5,000-order random flow that checks the book never stays crossed and every share is accounted for), each risk rule, order state transitions, cash and position domain rules, JWT issuing |
-| Integration (Spring context + PostgreSQL) | 93 | Every endpoint through MockMvc, authentication failures, reservations and releases, settlement of both sides, self-trade prevention, rollback and order book rebuild after a forced failure, database constraints, OpenAPI document |
+| Integration (Spring context + PostgreSQL) | 92 | Every endpoint through MockMvc, authentication failures, reservations and releases, settlement of both sides, self-trade prevention, rollback and order book rebuild after a forced failure, database constraints, OpenAPI document |
 | Concurrency | 4 | 12 threads trading two instruments over shared accounts, 16 threads depositing into one account, and the instrument lock (serial per instrument, parallel across instruments) |
 
 The concurrent trading test checks afterwards that total cash and total shares are unchanged, no balance,
