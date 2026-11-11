@@ -1,4 +1,4 @@
-﻿# Trading & Risk Platform
+# Trading & Risk Platform
 
 [![CI](https://github.com/a0930928334-jpg/trading-risk-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/a0930928334-jpg/trading-risk-platform/actions/workflows/ci.yml)
 
