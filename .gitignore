@@ -36,3 +36,11 @@ build/
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
+
+### Analytics (Python) ###
+analytics/.venv/
+analytics/report/
+analytics/**/__pycache__/
+analytics/.pytest_cache/
+analytics/.ruff_cache/
+analytics/*.egg-info/
