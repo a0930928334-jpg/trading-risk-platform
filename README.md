@@ -21,6 +21,7 @@ This is a portfolio project, not a real exchange: instruments, prices and liquid
 - [Demo](#demo)
 - [API](#api)
 - [Testing](#testing)
+- [Analytics](#analytics)
 - [Configuration](#configuration)
 - [Project layout](#project-layout)
 - [Limitations and roadmap](#limitations-and-roadmap)
@@ -41,6 +42,7 @@ This is a portfolio project, not a real exchange: instruments, prices and liquid
 | Liquidity (dev only) | A system market maker account with cash and shares quotes five non-crossing levels per side on every instrument |
 | Errors | RFC 9457 problem details everywhere, including 401/403 |
 | Web dashboard | React + TypeScript single-page app: log in or register, deposit, instrument list, live order book (click a level to use its price), order entry with value and price-band hints, open orders with cancel, order history, trades, positions and cash ledger; refreshes by polling every 1.5–5 seconds |
+| Analytics (Python) | Read-only data quality checks (ledger replay, reservations, fills, trades, conservation, positions, order book), order-flow metrics, two anomaly detectors scored against a seeded load generator, HTML and JSON report, CI job |
 | Delivery | Flyway migrations, OpenAPI/Swagger UI, Testcontainers tests, GitHub Actions CI |
 
 ## Architecture
@@ -127,13 +129,15 @@ Each decision has an Architecture Decision Record with the context, options and 
 | [0005](docs/adr/0005-limit-orders-only.md) | Limit orders only: the limit price bounds the reservation |
 | [0006](docs/adr/0006-pluggable-pre-trade-risk-rule-chain.md) | Pre-trade risk as a chain of independently tested `RiskRule` beans |
 | [0007](docs/adr/0007-problem-details-for-errors.md) | RFC 9457 problem details for every error |
+| [0008](docs/adr/0008-read-only-analytics-with-two-detectors.md) | Analytics reads PostgreSQL directly in read-only transactions; a MAD rule baseline is kept next to IsolationForest |
 
 ## Tech stack
 
 Java 21 · Spring Boot 3.5 (Web, Data JPA, Security, OAuth2 Resource Server, Validation, Actuator) ·
 PostgreSQL 16 · Flyway · Lombok · springdoc-openapi · JUnit 5, AssertJ, MockMvc, Testcontainers ·
 Maven wrapper · Docker Compose · GitHub Actions ·
-Front end: React 18, TypeScript, Vite, Vitest
+Front end: React 18, TypeScript, Vite, Vitest ·
+Analytics: Python 3.12, pandas, SQLAlchemy, psycopg, scikit-learn, matplotlib, pytest, ruff
 
 ## Quick start
 
@@ -253,6 +257,56 @@ The front end has its own Vitest unit tests for its formatting and calculation h
 Tests that trade create their own randomly named instrument, so they never share an order book and need
 no clean-up. No test depends on the market maker.
 
+## Analytics
+
+`analytics/` is a Python module that reads the database read-only and reports on it. It is the
+roadmap item "Python anomaly detection on order and trade flow", plus the data quality checks that make
+the detection trustworthy. [analytics/README.md](analytics/README.md) explains how to run it, what each
+check tests and how to read the report; [ADR 0008](docs/adr/0008-read-only-analytics-with-two-detectors.md)
+records why it reads the tables directly and why two detectors are kept.
+
+![Analytics report: seven passing checks and the order-flow metrics](docs/images/analytics-report.png)
+
+What it does:
+
+- **Seven invariant checks** with structured findings (entity ids, expected and actual values): the cash
+  ledger replays to every balance; reservations equal what open orders hold; `filled_quantity` and status
+  match the trades; every trade is priced inside both limits at the maker's price between two different
+  accounts; cash and shares are conserved; positions equal net trades; no instrument's open book is crossed.
+  The semantics follow the Java services. A failed check makes `python -m trading_analytics run` exit
+  non-zero.
+- **Metrics**: reject rate per risk rule, fill and cancel rates per instrument, time from placement to
+  first fill for takers and makers, orders per trade per account, and the flow over time.
+- **Anomaly detection** on per-account features with a robust z-score baseline (median and MAD) and
+  scikit-learn's IsolationForest, both scored against labels from the load generator.
+- **Load generator** through the REST API: 40 normal accounts and 2 each of three scripted anomalies
+  (`cancel_burst`, `risk_repeater`, `notional_prober`), seeded and interleaved in time.
+- **Tests on a real PostgreSQL** built from the Flyway migrations: the checks pass on a consistent history,
+  and ten injected faults (a corrupted ledger snapshot, a deleted ledger entry, a changed balance, a
+  repriced open order, inflated reserved shares, a lowered `filled_quantity`, a trade price outside its
+  limits, shares moved or created without a trade, a crossed book) are each caught by exactly the expected
+  check with the right identifiers. 26 test cases.
+- **CI**: the `analytics` job runs ruff and pytest, starts the application with the dev profile against a
+  PostgreSQL service, runs the load generator and the analysis, and uploads the report as an artifact.
+
+Numbers from one run of the load generator (seed 20261111) against this application on an empty
+database, followed by the analysis (the report above is from the same run):
+
+| | |
+|---|---|
+| Load | 46 accounts, 779 orders (71 rejected), 182 trades, 1,207 ledger entries, 332 open orders, in 76 s |
+| Checks | 7 of 7 passed, 0 findings |
+| Reject rate | 9.1% (price band 3.7%, order value cap 3.0%, insufficient funds 2.4% of all orders) |
+| Fill rate / user cancel rate | 26.0% of accepted orders fully filled; 26.4% cancelled by the user |
+| Time to first fill | takers p50 0.003 s; makers p50 19 s, p90 53 s |
+| Baseline (MAD, threshold 3.5) | 8 flagged: 6 true positives, 2 false positives; precision 0.75, recall 1.00, F1 0.86 |
+| IsolationForest (contamination 0.1) | 5 flagged: 5 true positives, 0 false positives, 1 missed `notional_prober`; precision 1.00, recall 0.83, F1 0.91 |
+
+The two false positives of the baseline are normal accounts whose orders never traded, which pushes their
+orders-per-trade feature past the threshold. The IsolationForest missed one anomaly because contamination
+0.1 of 46 accounts caps it at about 5 flags; it cannot flag all 6 without a higher prior. The data is
+synthetic and the sample is small, so these scores describe the scripted behaviours, not real flow.
+
 ## Configuration
 
 | Property | Default | Meaning |
@@ -284,6 +338,7 @@ src/main/resources/db/migration   Flyway V1–V6
 docs/adr                          architecture decision records
 frontend/                         React + Vite dashboard (proxies /api to :8080 in development)
 scripts/demo.sh, api.http         demo flows
+analytics/                        Python data quality checks, metrics, anomaly detection, load generator
 ```
 
 ## Limitations and roadmap
@@ -294,7 +349,6 @@ Not implemented in v0.1:
 - **Refresh tokens and token revocation**: access tokens are valid until they expire ([ADR 0001](docs/adr/0001-jwt-authentication-with-resource-server.md)).
 - **Kafka events** for orders and trades: not implemented.
 - **Redis caching** (for example order book snapshots or market data): not implemented.
-- **Python anomaly detection** on order and trade flow.
 - **Horizontal scaling**: order books and instrument locks live in one JVM, so v0.1 runs as a single instance ([ADR 0003](docs/adr/0003-database-as-source-of-truth-with-in-memory-order-books.md)).
 - Withdrawals, multiple currencies, multiple accounts per user, fees, average cost and P&L, real market data.
 - Idempotency keys for order placement and deposits.
