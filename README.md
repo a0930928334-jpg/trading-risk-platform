@@ -1,4 +1,4 @@
-﻿# Trading & Risk Platform
+# Trading & Risk Platform
 
 [![CI](https://github.com/a0930928334-jpg/trading-risk-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/a0930928334-jpg/trading-risk-platform/actions/workflows/ci.yml)
 
@@ -74,9 +74,6 @@ flowchart LR
     registry -->|"rebuild at startup / on failure"| db
 ```
 
-Redis and Kafka containers are defined in `docker-compose.yml` but are **reserved for v0.2**; the application
-does not use them.
-
 ## Order placement flow
 
 ```mermaid
@@ -143,7 +140,7 @@ Front end: React 18, TypeScript, Vite, Vitest
 Prerequisites: Java 21, Docker (Docker Desktop on Windows/macOS). Maven is provided by the wrapper.
 
 ```bash
-# 1. Start PostgreSQL (Redis and Kafka in the compose file are not needed for v0.1)
+# 1. Start PostgreSQL
 docker compose up -d postgres
 
 # 2. Run with the dev profile: provides a development JWT secret and starts the simulated market maker
@@ -238,12 +235,12 @@ Docker must be running: integration tests start a PostgreSQL 16 container with
 [Testcontainers](https://testcontainers.com/), shared by all test classes. They need no local database,
 and CI runs the same command.
 
-The suite has **172 test cases** (156 test methods; parameterised tests count once per case):
+The suite has **171 test cases** (156 test methods; parameterised tests count once per case):
 
 | Kind | Cases | What they cover |
 |---|---|---|
 | Unit (no Spring, no database) | 75 | Matching engine and order book (including a seeded 5,000-order random flow that checks the book never stays crossed and every share is accounted for), each risk rule, order state transitions, cash and position domain rules, JWT issuing |
-| Integration (Spring context + PostgreSQL) | 93 | Every endpoint through MockMvc, authentication failures, reservations and releases, settlement of both sides, self-trade prevention, rollback and order book rebuild after a forced failure, database constraints, OpenAPI document |
+| Integration (Spring context + PostgreSQL) | 92 | Every endpoint through MockMvc, authentication failures, reservations and releases, settlement of both sides, self-trade prevention, rollback and order book rebuild after a forced failure, database constraints, OpenAPI document |
 | Concurrency | 4 | 12 threads trading two instruments over shared accounts, 16 threads depositing into one account, and the instrument lock (serial per instrument, parallel across instruments) |
 
 The concurrent trading test checks afterwards that total cash and total shares are unchanged, no balance,
@@ -295,8 +292,8 @@ Not implemented in v0.1:
 
 - **Market orders** and other time-in-force types (IOC, FOK, day): a market order has no price to reserve against ([ADR 0005](docs/adr/0005-limit-orders-only.md)).
 - **Refresh tokens and token revocation**: access tokens are valid until they expire ([ADR 0001](docs/adr/0001-jwt-authentication-with-resource-server.md)).
-- **Kafka events** for orders and trades: the Kafka container is reserved for v0.2.
-- **Redis caching** (for example order book snapshots or market data): the Redis container is reserved for v0.2.
+- **Kafka events** for orders and trades: not implemented.
+- **Redis caching** (for example order book snapshots or market data): not implemented.
 - **Python anomaly detection** on order and trade flow.
 - **Horizontal scaling**: order books and instrument locks live in one JVM, so v0.1 runs as a single instance ([ADR 0003](docs/adr/0003-database-as-source-of-truth-with-in-memory-order-books.md)).
 - Withdrawals, multiple currencies, multiple accounts per user, fees, average cost and P&L, real market data.
