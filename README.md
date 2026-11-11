@@ -74,9 +74,6 @@ flowchart LR
     registry -->|"rebuild at startup / on failure"| db
 ```
 
-Redis and Kafka containers are defined in `docker-compose.yml` but are **reserved for v0.2**; the application
-does not use them.
-
 ## Order placement flow
 
 ```mermaid
@@ -143,7 +140,7 @@ Front end: React 18, TypeScript, Vite, Vitest
 Prerequisites: Java 21, Docker (Docker Desktop on Windows/macOS). Maven is provided by the wrapper.
 
 ```bash
-# 1. Start PostgreSQL (Redis and Kafka in the compose file are not needed for v0.1)
+# 1. Start PostgreSQL
 docker compose up -d postgres
 
 # 2. Run with the dev profile: provides a development JWT secret and starts the simulated market maker
@@ -295,8 +292,8 @@ Not implemented in v0.1:
 
 - **Market orders** and other time-in-force types (IOC, FOK, day): a market order has no price to reserve against ([ADR 0005](docs/adr/0005-limit-orders-only.md)).
 - **Refresh tokens and token revocation**: access tokens are valid until they expire ([ADR 0001](docs/adr/0001-jwt-authentication-with-resource-server.md)).
-- **Kafka events** for orders and trades: the Kafka container is reserved for v0.2.
-- **Redis caching** (for example order book snapshots or market data): the Redis container is reserved for v0.2.
+- **Kafka events** for orders and trades: not implemented.
+- **Redis caching** (for example order book snapshots or market data): not implemented.
 - **Python anomaly detection** on order and trade flow.
 - **Horizontal scaling**: order books and instrument locks live in one JVM, so v0.1 runs as a single instance ([ADR 0003](docs/adr/0003-database-as-source-of-truth-with-in-memory-order-books.md)).
 - Withdrawals, multiple currencies, multiple accounts per user, fees, average cost and P&L, real market data.
